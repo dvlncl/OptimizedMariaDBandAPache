@@ -1,0 +1,111 @@
+##############################################################################
+# PHASES 1-4: BACKUP & REVERSE COMMANDS
+##############################################################################
+
+# ============================================================================
+# PHASE 1: limits.conf
+# ============================================================================
+
+# BACKUP
+cp /etc/security/limits.conf /etc/security/limits.conf-20260112
+
+# REVERSE
+cp /etc/security/limits.conf-20260112 /etc/security/limits.conf
+# Or: cat /etc/security/limits.conf-20260112 > /etc/security/limits.conf
+
+
+# ============================================================================
+# PHASE 2: sysctl.conf
+# ============================================================================
+
+# BACKUP
+cp /etc/sysctl.conf /etc/sysctl.conf-20260112
+
+# REVERSE
+cp /etc/sysctl.conf-20260112 /etc/sysctl.conf
+sysctl -p
+# Or: cat /etc/sysctl.conf-20260112 > /etc/sysctl.conf && sysctl -p
+
+
+# ============================================================================
+# PHASE 3: Systemd Service Limits
+# ============================================================================
+
+# BACKUP
+cp -r /etc/systemd/system/mariadb.service.d /etc/systemd/system/mariadb.service.d-20260112
+
+# REVERSE (Remove limits.conf only)
+rm -f /etc/systemd/system/mariadb.service.d/limits.conf
+systemctl daemon-reload
+systemctl restart mariadb
+
+# OR REVERSE (Full directory restore)
+rm -rf /etc/systemd/system/mariadb.service.d
+cp -r /etc/systemd/system/mariadb.service.d-20260112 /etc/systemd/system/mariadb.service.d
+systemctl daemon-reload
+systemctl restart mariadb
+
+
+# ============================================================================
+# PHASE 4: my.cnf (File Limits Only)
+# ============================================================================
+
+# BACKUP
+cp /etc/my.cnf /etc/my.cnf-20260112-limits
+
+# REVERSE
+cp /etc/my.cnf-20260112-limits /etc/my.cnf
+systemctl restart mariadb
+# Or: cat /etc/my.cnf-20260112-limits > /etc/my.cnf && systemctl restart mariadb
+
+
+# ============================================================================
+# PHASES 3-4 COMBINED REVERSE (Do together)
+# ============================================================================
+
+rm -f /etc/systemd/system/mariadb.service.d/limits.conf
+cp /etc/my.cnf-20260112-limits /etc/my.cnf
+systemctl daemon-reload
+systemctl restart mariadb
+
+
+# ============================================================================
+# ALL PHASES 1-4: BACKUP ALL AT ONCE
+# ============================================================================
+
+cp /etc/security/limits.conf /etc/security/limits.conf-20260112 && \
+cp /etc/sysctl.conf /etc/sysctl.conf-20260112 && \
+cp -r /etc/systemd/system/mariadb.service.d /etc/systemd/system/mariadb.service.d-20260112 && \
+cp /etc/my.cnf /etc/my.cnf-20260112-limits && \
+echo "✅ Phases 1-4 backed up"
+
+
+# ============================================================================
+# ALL PHASES 1-4: REVERSE ALL AT ONCE
+# ============================================================================
+
+cp /etc/security/limits.conf-20260112 /etc/security/limits.conf && \
+cp /etc/sysctl.conf-20260112 /etc/sysctl.conf && \
+sysctl -p && \
+rm -f /etc/systemd/system/mariadb.service.d/limits.conf && \
+cp /etc/my.cnf-20260112-limits /etc/my.cnf && \
+systemctl daemon-reload && \
+systemctl restart mariadb && \
+echo "✅ Phases 1-4 reversed"
+
+
+# ============================================================================
+# VERIFICATION AFTER REVERSE
+# ============================================================================
+
+# Verify all restored
+systemctl status mariadb | head -10
+mysql -e "SHOW VARIABLES LIKE 'open_files_limit';"
+mysql -e "SHOW VARIABLES LIKE 'table_open_cache';"
+cat /proc/$(pgrep mariadbd)/limits | grep "open files"
+systemctl status mariadb | grep -i warning
+
+
+##############################################################################
+# END OF PHASES 1-4 COMMANDS
+##############################################################################
