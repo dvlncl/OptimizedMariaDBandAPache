@@ -1,0 +1,27 @@
+# Baseline (FortiGate / routing)
+ping -c 2 10.0.1.1
+nc -zv 10.0.1.1 3306
+
+
+
+
+# List DOCKER-USER rules
+sudo iptables -L DOCKER-USER -n -v --line-numbers
+
+# Add ontario-api → 10.0.1.1
+sudo iptables -I DOCKER-USER -s 172.21.0.0/16 -d 10.0.1.1 -j ACCEPT
+sudo iptables -A DOCKER-USER -d 10.0.1.1 -j DROP
+
+# Remove a rule by line number (e.g. line 1)
+sudo iptables -D DOCKER-USER 1
+
+
+
+# Config test
+docker exec nginx-proxy nginx -t
+
+# Reload
+docker exec nginx-proxy nginx -s reload
+
+# Check client IP nginx sees
+curl -H "X-Forwarded-For: 1.2.3.4" https://api1.mycompany.com:10344/health
