@@ -1,8 +1,29 @@
+# All chains and rules (verbose)
+sudo iptables -L -n -v
+
+# With line numbers (useful for deleting rules)
+sudo iptables -L -n -v --line-numbers
+
+# All tables
+sudo iptables -t nat -L -n -v
+sudo iptables -t filter -L -n -v
+sudo iptables -t mangle -L -n -v
+
 # Baseline (FortiGate / routing)
 ping -c 2 10.0.1.1
 nc -zv 10.0.1.1 3306
 
+# DOCKER-USER only
+sudo iptables -L DOCKER-USER -n -v --line-numbers
 
+# INPUT (incoming)
+sudo iptables -L INPUT -n -v --line-numbers
+
+# FORWARD (through host)
+sudo iptables -L FORWARD -n -v --line-numbers
+
+# OUTPUT (outgoing)
+sudo iptables -L OUTPUT -n -v --line-numbers
 
 
 # List DOCKER-USER rules
