@@ -46,3 +46,28 @@ docker exec nginx-proxy nginx -s reload
 
 # Check client IP nginx sees
 curl -H "X-Forwarded-For: 1.2.3.4" https://api1.mycompany.com:10344/health
+
+
+# Last 100 lines (access + error)
+docker logs nginx-proxy --tail 100
+
+# Follow logs live
+docker logs nginx-proxy -f
+
+# Last 200 lines, timestamps
+docker logs nginx-proxy --tail 200 -t
+
+# Lines that look like access log (IP at start)
+docker logs nginx-proxy --tail 500 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+'
+
+# Lines containing "/ontario/"
+docker logs nginx-proxy --tail 1000 2>/dev/null | grep "/ontario/"
+
+# Lines containing "/wildfire/"
+docker logs nginx-proxy --tail 1000 2>/dev/null | grep "/wildfire/"
+
+# Export last 1000 lines
+docker logs nginx-proxy --tail 1000 > nginx-access.txt
+
+# Split access vs error (if format allows)
+docker logs nginx-proxy --tail 1000 2> nginx-error.txt 1> nginx-access.txt
